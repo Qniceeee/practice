@@ -497,7 +497,6 @@ class viewArticles extends postArticles
         $sqlart = $pdo_calc->prepare("SELECT * FROM articles ORDER BY id DESC");
         $sqlart->execute();
         $row_articles = $sqlart->fetchAll();
-        sort($row_articles,'1');
         $island_desk = 0;
         foreach ($row_articles as $rowArticle) {
             if ($island_desk < 1) {
