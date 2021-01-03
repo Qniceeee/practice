@@ -1,5 +1,5 @@
 RewriteEngine On
-RewriteBase /phponly/
+RewriteBase /newstat/
 
 #RewriteCond %{REQUEST_URI} !^/index.php
 #RewriteRule ^(.*?)/$ index.php?page=$1
@@ -7,4 +7,4 @@ RewriteBase /phponly/
 RewriteRule ^index\.php$ - [L]
 RewriteCond %{REQUES_FILENAME} !-f
 RewriteCond %{REQUES_FILENAME} !-d
-RewriteRule ^(.*) /phponly/index.php?route=$1 [L]
+RewriteRule ^(.*) /newstat/index.php?route=$1 [L]
