@@ -1,7 +1,7 @@
-
 <?php
 
 require_once 'conf/config.php';
+
 class errorReport
 {
 
@@ -12,54 +12,53 @@ class errorReport
 
         if (!isset($param['x'])) {
             $errors[] = 'Parameter "x" is missing';
-        }
-        elseif (!is_numeric($param['x'])) {
+        } elseif (!is_numeric($param['x'])) {
             $errors[] = 'Parameter "x" must be numeric';
         }
 
         if (!isset($param['y'])) {
             $errors[] = 'Parameter "y" is missing';
-        }
-        elseif (!is_numeric($param['y'])) {
+        } elseif (!is_numeric($param['y'])) {
             $errors[] = 'Parameter "y" must be numeric';
 
         }
 
         if (empty($param['action'])) {
             $errors[] = 'Parameter "action" is missing';
-        }
-        elseif (!in_array($param['action'], $allowedActions)) {
+        } elseif (!in_array($param['action'], $allowedActions)) {
             $errors[] = 'Parameter "action" must be one of these values: ' . implode(',', $allowedActions);
         }
-         if (!isset($_SESSION['account_id'])) {
-             $errors[] = 'Авторизуйтесь';
-         }
+        if (!isset($_SESSION['account_id'])) {
+            $errors[] = 'Авторизуйтесь';
+        }
 
         // $error_array = implode('<br>',$errors);
-         return $errors;
-       // return $errors;
+        return $errors;
+        // return $errors;
     }
 
 
 }
-class calculator{
+
+class calculator
+{
     public $x;
     public $y;
     public $action;
     public $result;
 
-    function __construct($x,$y,$action)
+    function __construct($x, $y, $action)
     {
         $this->x = $x;
         $this->y = $y;
         $this->action = $action;
 
     }
-    function calculate($x,$y,$action)
+
+    function calculate($x, $y, $action)
     {
         $result = null;
-        switch ($action)
-        {
+        switch ($action) {
             case 'plus':
                 $result = $x + $y;
                 break;
@@ -78,13 +77,13 @@ class calculator{
 
     public static function calcResulty($param)
     {
-        if (!empty($param)){
+        if (!empty($param)) {
 
 
             $errorcache = errorReport::checkErrorCalc($param);
-            echo implode('<br>',$errorcache);
+            echo implode('<br>', $errorcache);
 
-            if(empty($errorcache)){
+            if (empty($errorcache)) {
 
                 $x = $param['x'];
                 $y = $param['y'];
@@ -93,14 +92,13 @@ class calculator{
                 $calcul = new calculator('$x', '$y', '$action');
 
 
-
                 $result = $calcul->calculate($x, $y, $action);
-                    echo 'Ответ:'.$result;
+                echo 'Ответ:' . $result;
                 $time_date1 = date("Y-m-d");
                 global $pdo_calc;
                 $savePostResults = "INSERT INTO results (setup, date, type) VALUES  ('$result', '$time_date1', '$action')";
                 $pdo_calc->exec($savePostResults);
-            }else{
+            } else {
 
                 errorReport::checkErrorCalc($param);
             }
@@ -109,69 +107,72 @@ class calculator{
     }
 
 
-
 }
 
 
-class viewResults{
-    public static function viewCalculationsGroup ()
+class viewResults
+{
+    public static function viewCalculationsGroup()
     {
         global $pdo_calc;
-    $result_calc = $pdo_calc->prepare("SELECT date, COUNT(*) FROM results GROUP BY date");
-$result_calc->execute();
-$row_calc_result = $result_calc->fetchAll();
+        $result_calc = $pdo_calc->prepare("SELECT date, COUNT(*) FROM results GROUP BY date");
+        $result_calc->execute();
+        $row_calc_result = $result_calc->fetchAll();
 
-    $island_desk = 0;
-    foreach ($row_calc_result as $rowExec)
+        $island_desk = 0;
+        foreach ($row_calc_result as $rowExec) {
+            if ($island_desk < 1) {
+                echo '<table border="1">';
+                $island_desk++;
+            }
+
+            echo "<tr>";
+
+            echo "<td>" . "Запросов:" . $rowExec['COUNT(*)'] . "</td>";
+            echo "<td>" . "Даты:" . $rowExec['date'] . "</td>";
+            echo "</tr>";
+
+
+        }
+        echo "</tabl>";
+    }
+
+    public static function viewCalculationsResults()
     {
-        if ($island_desk < 1)
-        {
-            echo '<table border="1">';
-            $island_desk++;
+
+        global $pdo_calc;
+        $result_calc_table = $pdo_calc->prepare('SELECT * FROM results');
+        $result_calc_table->execute();
+
+        $table_res = $result_calc_table->fetchAll();
+        $island_table = 0;
+        foreach ($table_res as $calc_rowTable) {
+            if ($island_table < 1) {
+                echo '<table border="1">';
+                $island_table++;
+            }
+            $id_db = $calc_rowTable['id'];
+            echo "<tr>";
+            echo "<td>" . "Число:" . $calc_rowTable['setup'] . "</td>";
+            echo "<td>" . "Дата:" . $calc_rowTable['date'] . "</td>";
+            echo "<td>" . "Тип:" . $calc_rowTable['type'] . "</td>";
+            echo "<td>" . '<form action="delete" method="post">';
+            echo "<input type='hidden' name='id' value='$id_db' />" . '<input type="submit" value="DEL">';
+            echo '</form>' . "</td>";
+
+            echo "</tr>";
+
         }
-
-        echo "<tr>";
-
-        echo "<td>" . "Запросов:" . $rowExec['COUNT(*)'] . "</td>";
-        echo "<td>" . "Даты:" . $rowExec['date'] . "</td>";
-        echo "</tr>";
+        echo "</table>";
 
 
     }
-    echo "</tabl>";
-    }
-public static function viewCalculationsResults(){
-
-    global $pdo_calc;
-    $result_calc_table = $pdo_calc->prepare('SELECT * FROM results');
-    $result_calc_table->execute();
-
-    $table_res = $result_calc_table->fetchAll();
-    $island_table = 0;
-    foreach ($table_res as $calc_rowTable) {
-        if ($island_table < 1) {
-            echo '<table border="1">';
-            $island_table++;
-        }
-        $id_db = $calc_rowTable['id'];
-        echo "<tr>";
-        echo "<td>" . "Число:" . $calc_rowTable['setup'] . "</td>";
-        echo "<td>" . "Дата:" . $calc_rowTable['date'] . "</td>";
-        echo "<td>" . "Тип:" . $calc_rowTable['type'] . "</td>";
-        echo "<td>" . '<form action="delete" method="post">';
-        echo "<input type='hidden' name='id' value='$id_db' />" . '<input type="submit" value="DEL">';
-        echo '</form>' . "</td>";
-
-        echo "</tr>";
-
-    }
-    echo "</table>";
-
-
 }
-}
-class deleteResultsController{
-   public static function deletePostTable(){
+
+class deleteResultsController
+{
+    public static function deletePostTable()
+    {
         global $pdo_calc;
         $delete_post = $_POST['id'];
         $deleteCalcPost = $pdo_calc->prepare("DELETE FROM
@@ -182,7 +183,8 @@ class deleteResultsController{
     }
 }
 
-class errorReportLog{
+class errorReportLog
+{
     public static function checkErrorlog($auth_params)
     {
         $authErrors = [];
@@ -197,6 +199,7 @@ class errorReportLog{
         return $authErrors;
     }
 }
+
 class loginUser
 {
     public $login;
@@ -210,7 +213,9 @@ class loginUser
 
 
     }
-    public function execLog($login, $password){
+
+    public function execLog($login, $password)
+    {
         try {
             global $pdo_auth;
 
@@ -218,21 +223,20 @@ class loginUser
             $result_login = $pdo_auth->prepare("SELECT * FROM users WHERE login='$login' AND password='$password'");
             $result_login->execute();
             $rowLogin = $result_login->fetch();
-           // var_dump($rowLogin);
-            if($rowLogin){
+            // var_dump($rowLogin);
+            if ($rowLogin) {
 
                 $_SESSION['account_id'] = $rowLogin['account_id'];
 
 
-               // header('Location: index');
+                // header('Location: index');
 
 
-
-            }else{
+            } else {
                 echo '<br>' . 'Отказанов в доступе';
 
             }
-        }catch ( PDOException $e){
+        } catch (PDOException $e) {
 
             echo $e->getMessage();
             echo 'отказано в доступе';
@@ -253,11 +257,9 @@ class loginUser
                 $password = $param['password'];
 
 
-                $registration = new loginUser('$login','$password');
+                $registration = new loginUser('$login', '$password');
 
                 $registration->execLog($login, $password);
-
-
 
 
             } else {
@@ -290,6 +292,7 @@ class errorsReg
 
     }
 }
+
 class bigUser
 {
     public $login;
@@ -345,10 +348,13 @@ class bigUser
         }
     }
 }
-class userNickName{
+
+class userNickName
+{
     public $account_id;
 
-    function __construct($account_id){
+    function __construct($account_id)
+    {
         $this->account_id = $account_id;
 
     }
@@ -364,18 +370,13 @@ class userNickName{
             $nickname['login'] = $rowLogin_auth['login'];
 
 
-
-
         }
         return $nickname['login'];
     }
 
 
-
-
-
-
 }
+
 class userStatus extends userNickName
 {
     public static function checkStatus($param)
@@ -394,31 +395,33 @@ class userStatus extends userNickName
         return $status['status'];
     }
 }
-class articles{
-        public $newCategory;
 
-        function __construct($newCategory)
-        {
-            $this->newCategory = $newCategory;
-        }
+class articles
+{
+    public $newCategory;
 
-        public static function postArticles($newCategory)
-        {
-               try
-               {
+    function __construct($newCategory)
+    {
+        $this->newCategory = $newCategory;
+    }
+
+    public static function postArticles($newCategory)
+    {
+        try {
             global $pdo_calc;
 
             $sql = "INSERT INTO `categoryes` (`category`) VALUES ('$newCategory')";
-                   $pdo_calc->exec($sql);
+            $pdo_calc->exec($sql);
 
-                     echo 'Категория создана ';
-                } catch (PDOException $e)
-               {
-                    echo '<br>' . 'такая категория уже создана или другая ошибка';
-                }
+            echo 'Категория создана ';
+        } catch (PDOException $e) {
+            echo '<br>' . 'такая категория уже создана или другая ошибка';
+        }
 
-         }
-    public static function renderArticles(){
+    }
+
+    public static function renderArticles()
+    {
 
 
         global $pdo_calc;
@@ -432,7 +435,7 @@ class articles{
             if ($island_table < 1) {
                 $island_table++;
             }
-$category1 = $category['category'];
+            $category1 = $category['category'];
 
             echo "<option value='$category1' >" . $category['category'] . '</option>';
         }
@@ -449,73 +452,70 @@ class postArticles
     public $login;
     public $account_id;
 
-function __construct($title_article,$text_article,$category,$login,$account_id )
-{
-$this->title_article = $title_article;
-$this->text_article = $text_article;
-$this->category = $category;
-$this->login = $login;
-$this->account_id = $account_id;
-}
-
-public function postArticlesNews($title_article,$text_article,$category,$login,$account_id){
-
-    $articles = new postArticles('$title_article','$text_article','$category','$login','$account_id');
-    $articles->sqlArticles($title_article,$text_article,$category,$login,$account_id);
-
-
-}
-
-public static function sqlArticles($title_article,$text_article,$category,$login,$account_id){
-    try {
-
-        global $pdo_calc;
-        $savePostResults = "INSERT INTO articles (account_id, login, category, text_article, title_article) VALUES ('$account_id', '$login', '$category', '$text_article', '$title_article');";
-        $pdo_calc->exec($savePostResults);
-
-    }catch ( PDOException $e){
-
-        echo $e->getMessage();
-        echo 'отказано в доступе';
+    function __construct($title_article, $text_article, $category, $login, $account_id)
+    {
+        $this->title_article = $title_article;
+        $this->text_article = $text_article;
+        $this->category = $category;
+        $this->login = $login;
+        $this->account_id = $account_id;
     }
 
-
-}
-}
-class viewArticles extends postArticles{
-
-  public static function viewArticlesPosts(){
-      global $pdo_calc;
-      $sqlart = $pdo_calc->prepare("SELECT * FROM articles");
-      $sqlart->execute();
-      $row_articles = $sqlart->fetchAll();
-       $island_desk = 0;
-    foreach ($row_articles as $rowArticle)
+    public function postArticlesNews($title_article, $text_article, $category, $login, $account_id)
     {
-        if ($island_desk < 1)
-        {
 
-            $island_desk++;
+        $articles = new postArticles('$title_article', '$text_article', '$category', '$login', '$account_id');
+        $articles->sqlArticles($title_article, $text_article, $category, $login, $account_id);
+
+
+    }
+
+    public static function sqlArticles($title_article, $text_article, $category, $login, $account_id)
+    {
+        try {
+
+            global $pdo_calc;
+            $savePostResults = "INSERT INTO articles (account_id, login, category, text_article, title_article) VALUES ('$account_id', '$login', '$category', '$text_article', '$title_article');";
+            $pdo_calc->exec($savePostResults);
+
+        } catch (PDOException $e) {
+
+            echo $e->getMessage();
+            echo 'отказано в доступе';
         }
 
-        echo '<table border="1"> <tr><td>' . $rowArticle['title_article'] . '</td>';
-
-
-
-
-     echo '</tr><tr><td>'. $rowArticle['text_article'] .'</td></tr>';
-
-
-
-        echo '  <tr><td>' . 'Автор: ' .  $rowArticle['login'] . ' Категория: ' . $rowArticle['category'] .'</td> </tr></table>';
-
-
-
-
 
     }
+}
+
+class viewArticles extends postArticles
+{
+
+    public static function viewArticlesPosts()
+    {
+        global $pdo_calc;
+        $sqlart = $pdo_calc->prepare("SELECT * FROM articles");
+        $sqlart->execute();
+        $row_articles = $sqlart->fetchAll();
+        $island_desk = 0;
+        foreach ($row_articles as $rowArticle) {
+            if ($island_desk < 1) {
+
+                $island_desk++;
+            }
+
+            echo '<table border="1"> <tr><td>' . $rowArticle['title_article'] . '</td>';
+
+
+            echo '</tr><tr><td>' . $rowArticle['text_article'] . '</td></tr>';
+
+
+            echo '  <tr><td>' . 'Автор: ' . $rowArticle['login'] . ' Категория: ' . $rowArticle['category'] . '</td> </tr></table>';
+
+
+        }
 
     }
-  }
+}
 
 
